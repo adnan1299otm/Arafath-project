@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Sidebar from './components/Sidebar';
@@ -9,7 +10,7 @@ import { performAITask, getLanguageFromTitle } from './services/geminiService';
 import { 
   Sparkles, Star, BookOpen, Type, Plus, FileText, Loader2, Download, 
   Globe, BrainCircuit, AlertTriangle, Menu,
-  Code2, Bug, X, Cpu, ChevronRight, Zap, Lightbulb
+  Code2, Bug, X, Cpu, ChevronRight, Zap, Lightbulb, Wrench
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -90,6 +91,7 @@ const App: React.FC = () => {
       const result = await performAITask(action, activeNote, language);
       let content = activeNote.content;
       if (action === 'improve' || action === 'fix') {
+        // Overwrite or update the core content directly for these actions
         content = result.text;
       } else {
         const header = action === 'think' ? t.deepThink : action === 'search' ? t.search : action.toUpperCase();
@@ -99,6 +101,19 @@ const App: React.FC = () => {
     } catch (error: any) {
       setApiError(error.message);
     } finally { setIsAiProcessing(false); }
+  };
+
+  const handleDownloadNote = () => {
+    if (!activeNote) return;
+    const blob = new Blob([activeNote.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = activeNote.title || 'note.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -151,6 +166,9 @@ const App: React.FC = () => {
                 <div className="h-6 w-px bg-slate-200 dark:bg-white/[0.08] hidden sm:block" />
                 
                 <div className="hidden lg:flex items-center gap-1">
+                  <button onClick={() => runAiTask('fix')} className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-red-500/5 rounded-xl transition-all" title={t.fixErrors}>
+                    <Wrench size={18}/> <span className="text-[11px] font-bold uppercase tracking-wider">{t.fixErrors}</span>
+                  </button>
                   <button onClick={() => runAiTask('summarize')} className="flex items-center gap-2 px-3 py-2 text-slate-500 hover:text-brand-600 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-all">
                     <BookOpen size={18}/> <span className="text-[11px] font-medium">{t.summarize}</span>
                   </button>
@@ -160,13 +178,17 @@ const App: React.FC = () => {
                   <button onClick={() => runAiTask('think')} className="flex items-center gap-2 px-3 py-2 text-brand-500 hover:bg-brand-500/5 rounded-xl transition-all">
                     <BrainCircuit size={18}/> <span className="text-[11px] font-medium">{t.deepThink}</span>
                   </button>
-                  <button onClick={() => runAiTask('search')} className="flex items-center gap-2 px-3 py-2 text-blue-500 hover:bg-blue-500/5 rounded-xl transition-all">
-                    <Globe size={18}/> <span className="text-[11px] font-medium">{t.search}</span>
-                  </button>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleDownloadNote}
+                  className="p-2.5 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-all"
+                  title={t.download}
+                >
+                  <Download size={20} />
+                </button>
                 <button 
                   onClick={() => setIsAiOpen(true)} 
                   className="bg-brand-600 hover:bg-brand-700 text-white text-[11px] font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-xl shadow-brand-600/20 active:scale-95 transition-all"

@@ -23,8 +23,6 @@ let currentKeyIndex = 0;
  */
 export const getAIClient = () => {
   const keys = getAvailableKeys();
-  // If no keys are found, it will still try to use whatever is there, 
-  // but usually Vercel handles the injection.
   const activeKey = keys[currentKeyIndex] || process.env.API_KEY;
   return new GoogleGenAI({ apiKey: activeKey });
 };
@@ -103,9 +101,14 @@ export const performAITask = async (action: AIAction, note: Note, userLang: Lang
       let systemInstruction = `You are a professional assistant. ${emphasisRules}`;
 
       if (action === 'fix') {
-        systemInstruction = `You are a world-class software engineer. ${emphasisRules}
-        Analyze the code for syntax errors and logic. Provide the corrected code in a single block, followed by a concise explanation in ${languageNames[userLang]}.`;
-        prompt = `Debug and fix the following ${language} code:\n\n${note.content}`;
+        systemInstruction = `You are a strict technical editor and debugger. Your task is to IDENTIFY and FIX all errors (spelling, grammar, syntax, logic) in the provided content. 
+        CRITICAL RULES:
+        1. Return ONLY the fully corrected content.
+        2. DO NOT provide a summary.
+        3. DO NOT provide an explanation or introduction.
+        4. DO NOT change the structure, just fix the errors.
+        5. If it's code, ensure it remains valid code.`;
+        prompt = `Fix errors in the following ${language} content:\n\n${note.content}`;
       }
 
       const response = await ai.models.generateContent({
@@ -128,7 +131,7 @@ export const performAITask = async (action: AIAction, note: Note, userLang: Lang
       if (isQuotaError && attempts < maxAttempts - 1) {
         rotateKey();
         attempts++;
-        await sleep(1000); // Small delay before retry
+        await sleep(1000); 
         continue;
       }
       
