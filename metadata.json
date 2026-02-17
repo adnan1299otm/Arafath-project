@@ -1,0 +1,7 @@
+{
+  "name": "Arafath project",
+  "description": "A professional-grade note-taking application with VS Code aesthetics, featuring Deep Thinking, Live Audio, and Search Grounding.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
